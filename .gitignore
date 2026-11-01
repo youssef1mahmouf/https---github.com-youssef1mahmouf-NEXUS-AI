@@ -1,0 +1,44 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.env
+*.log
+*.err
+
+# Flutter
+.dart_tool/
+build/
+dist/
+*.lock.bak
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data
+nexus_ai_data/
+*.db
+*.sqlite
+
+# IDE
+.idea/
+.vscode/*.log
+
+# Logs
+logs/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub/
+build/
+
+# IDE
+.idea/
+.vscode/
