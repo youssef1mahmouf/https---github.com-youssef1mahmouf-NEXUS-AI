@@ -11,22 +11,42 @@ class MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUser = message.isUser;
     final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         constraints: const BoxConstraints(maxWidth: 720),
         decoration: BoxDecoration(
+          gradient: isUser
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    scheme.primary.withValues(alpha: isDark ? 0.85 : 0.9),
+                    scheme.tertiary.withValues(alpha: isDark ? 0.75 : 0.85),
+                  ],
+                )
+              : null,
           color: isUser
-              ? scheme.primaryContainer
-              : scheme.surfaceContainerHighest.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(18),
+              ? null
+              : (isDark ? Colors.white : Colors.white).withValues(
+                  alpha: isDark ? 0.08 : 0.65,
+                ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isUser
+                ? Colors.white.withValues(alpha: 0.18)
+                : scheme.primary.withValues(alpha: isDark ? 0.18 : 0.12),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: (isUser ? scheme.primary : Colors.black).withValues(
+                alpha: isUser ? 0.35 : 0.06,
+              ),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -36,7 +56,10 @@ class MessageBubble extends StatelessWidget {
             if (message.content.isNotEmpty)
               Text(
                 message.content,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: isUser ? Colors.white : scheme.onSurface,
+                  height: 1.4,
+                ),
               ),
             if (message.attachments.isNotEmpty) ...[
               const SizedBox(height: 8),
