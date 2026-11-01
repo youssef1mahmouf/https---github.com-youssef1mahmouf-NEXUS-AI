@@ -123,22 +123,43 @@ class _RingPainter extends CustomPainter {
       ..strokeWidth = 1.2;
     for (int i = 0; i < 3; i++) {
       final r = (maxR * (0.55 + i * 0.15)).clamp(0.01, double.infinity);
-      final sweep = math.pi * (1.2 + 0.4 * math.sin(t * 2 * math.pi + i));
+
+      // Validate every shader input before creating the shader. A non-finite or
+      // degenerate centre/radius (e.g. NaN or Infinity surviving a layout
+      // transition such as AnimatedSwitcher) makes Rect.fromCircle /
+      // createShader hit the dart:ui painting assertion and crash the
+      // renderer. Skip this ring rather than painting invalid geometry.
+      if (!center.dx.isFinite || !center.dy.isFinite) {
+        continue;
+      }
+      if (!r.isFinite || r <= 0) {
+        continue;
+      }
+      final shaderRect = Rect.fromCircle(center: center, radius: r);
+      if (!shaderRect.left.isFinite ||
+          !shaderRect.top.isFinite ||
+          !shaderRect.right.isFinite ||
+          !shaderRect.bottom.isFinite ||
+          shaderRect.width <= 0 ||
+          shaderRect.height <= 0) {
+        continue;
+      }
+
+      // The engine's Gradient.sweep asserts startAngle < endAngle
+      // (endAngle defaults to 2π). Because sweep angles wrap every 2π,
+      // normalize startAngle into [0, 2π) so the assertion always holds
+      // while keeping the gradient (and the drawn arc) angularly identical.
+      final startAngle = (t * 2 * math.pi + i) % (2 * math.pi);
+      final sweep = math.pi * (1.2 + 0.4 * math.sin(startAngle));
       paint.shader = SweepGradient(
-        startAngle: t * 2 * math.pi + i,
+        startAngle: startAngle,
         colors: [
           scheme.primary.withValues(alpha: 0.0),
           scheme.primary.withValues(alpha: isDark ? 0.7 : 0.5),
           scheme.tertiary.withValues(alpha: 0.0),
         ],
-      ).createShader(Rect.fromCircle(center: center, radius: r));
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: r),
-        t * 2 * math.pi + i,
-        sweep,
-        false,
-        paint,
-      );
+      ).createShader(shaderRect);
+      canvas.drawArc(shaderRect, startAngle, sweep, false, paint);
     }
     // dotted orbit
     final dotPaint = Paint()..color = scheme.primary.withValues(alpha: 0.6);
