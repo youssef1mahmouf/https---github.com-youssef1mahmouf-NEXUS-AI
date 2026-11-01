@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 enum AttachmentType { image, video, file }
 
@@ -29,14 +29,14 @@ class Attachment {
   };
 
   factory Attachment.fromJson(Map<String, dynamic> json) => Attachment(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    path: json['path'] as String,
+    id: _asString(json['id'], ''),
+    name: _asString(json['name'], ''),
+    path: _asString(json['path'], ''),
     type: AttachmentType.values.firstWhere(
-      (e) => e.name == json['type'],
+      (e) => e.name == _asString(json['type'], ''),
       orElse: () => AttachmentType.file,
     ),
-    size: json['size'] as int?,
+    size: json['size'] is int ? json['size'] as int : null,
   );
 }
 
@@ -73,18 +73,19 @@ class Message {
   };
 
   factory Message.fromJson(Map<String, dynamic> json) => Message(
-    id: json['id'] as String,
-    conversationId: json['conversationId'] as String,
-    content: json['content'] as String,
-    isUser: json['isUser'] as bool,
-    createdAt: DateTime.parse(json['createdAt'] as String),
+    id: _asString(json['id'], ''),
+    conversationId: _asString(json['conversationId'], ''),
+    content: _asString(json['content'], ''),
+    isUser: _asBool(json['isUser'], false),
+    createdAt: _parseDateTime(json['createdAt'], DateTime.now()),
     attachments: (json['attachments'] as List<dynamic>? ?? [])
-        .map((e) => Attachment.fromJson(e as Map<String, dynamic>))
+        .whereType<Map<String, dynamic>>()
+        .map((e) => Attachment.fromJson(e))
         .toList(),
     sources: (json['sources'] as List<dynamic>? ?? [])
-        .map((e) => e.toString())
+        .whereType<String>()
         .toList(),
-    isEdited: json['isEdited'] as bool? ?? false,
+    isEdited: _asBool(json['isEdited'], false),
   );
 }
 
@@ -124,14 +125,29 @@ class Conversation {
   };
 
   factory Conversation.fromJson(Map<String, dynamic> json) => Conversation(
-    id: json['id'] as String,
-    title: json['title'] as String,
-    createdAt: DateTime.parse(json['createdAt'] as String),
-    updatedAt: DateTime.parse(json['updatedAt'] as String),
+    id: _asString(json['id'], ''),
+    title: _asString(json['title'], 'Untitled'),
+    createdAt: _parseDateTime(json['createdAt'], DateTime.now()),
+    updatedAt: _parseDateTime(json['updatedAt'], DateTime.now()),
     messages: (json['messages'] as List<dynamic>? ?? [])
-        .map((e) => Message.fromJson(e as Map<String, dynamic>))
+        .whereType<Map<String, dynamic>>()
+        .map((e) => Message.fromJson(e))
         .toList(),
   );
+}
+
+// Defensive parsing helpers for backward-compatible storage migration.
+String _asString(dynamic value, String fallback) => value is String ? value : fallback;
+
+bool _asBool(dynamic value, bool fallback) => value is bool ? value : fallback;
+
+DateTime _parseDateTime(dynamic value, DateTime fallback) {
+  if (value is! String) return fallback;
+  try {
+    return DateTime.parse(value);
+  } catch (_) {
+    return fallback;
+  }
 }
 
 // helper to avoid unused import warning
@@ -141,6 +157,8 @@ String encodeConversations(List<Conversation> list) =>
 List<Conversation> decodeConversations(String raw) {
   final list = jsonDecode(raw) as List<dynamic>;
   return list
-      .map((e) => Conversation.fromJson(e as Map<String, dynamic>))
+      .whereType<Map<dynamic, dynamic>>()
+      .map((e) => Conversation.fromJson(e.cast<String, dynamic>()))
+      .where((c) => c.id.isNotEmpty && c.title.isNotEmpty)
       .toList();
 }
