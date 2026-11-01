@@ -5,6 +5,7 @@ import 'core/services/attachment_service.dart';
 import 'core/services/live_voice_service.dart';
 import 'core/services/speech_service.dart';
 import 'core/services/storage_service.dart';
+import 'core/services/tts_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 import 'features/chat/providers/chat_provider.dart';
@@ -19,6 +20,7 @@ class NexusApp extends StatelessWidget {
     required this.liveVoice,
     required this.themeProvider,
     required this.chatProvider,
+    this.tts,
   });
 
   final StorageService storage;
@@ -27,6 +29,7 @@ class NexusApp extends StatelessWidget {
   final LiveVoiceService liveVoice;
   final ThemeProvider themeProvider;
   final ChatProvider chatProvider;
+  final TextToSpeechService? tts;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +49,7 @@ class NexusApp extends StatelessWidget {
             speech: speech,
             attachments: attachments,
             liveVoice: liveVoice,
+            tts: tts,
           ),
         ),
       ),

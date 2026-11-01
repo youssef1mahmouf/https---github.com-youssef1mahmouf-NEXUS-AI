@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/services/attachment_service.dart';
 import '../../../core/services/live_voice_service.dart';
 import '../../../core/services/speech_service.dart';
+import '../../../core/services/tts_service.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../shared/widgets/ambient_background.dart';
 import '../../../shared/widgets/glass_container.dart';
@@ -19,11 +20,13 @@ class ChatHomeScreen extends StatelessWidget {
     required this.speech,
     required this.attachments,
     required this.liveVoice,
+    this.tts,
   });
 
   final SpeechService speech;
   final AttachmentService attachments;
   final LiveVoiceService liveVoice;
+  final TextToSpeechService? tts;
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +96,7 @@ class ChatHomeScreen extends StatelessWidget {
                                   chat.activeConversation!.messages.length,
                               itemBuilder: (ctx, i) => MessageBubble(
                                 message: chat.activeConversation!.messages[i],
+                                tts: tts,
                               ),
                             ),
                     ),

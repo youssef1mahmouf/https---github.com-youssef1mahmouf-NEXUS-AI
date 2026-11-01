@@ -9,6 +9,7 @@ import 'package:nexus_ai/core/services/live_voice_service.dart';
 
 import 'package:nexus_ai/core/services/speech_service.dart';
 import 'package:nexus_ai/core/services/storage_service.dart';
+import 'package:nexus_ai/core/services/tts_service.dart';
 import 'package:nexus_ai/core/theme/theme_provider.dart';
 import 'package:nexus_ai/features/chat/providers/chat_provider.dart';
 
@@ -53,6 +54,7 @@ void main() {
         liveVoice: SimulatedLiveVoiceService(),
         themeProvider: themeProvider,
         chatProvider: chatProvider,
+        tts: NoOpTextToSpeechService(),
       ),
     );
     await tester.pump();

@@ -29,15 +29,31 @@ class ChatProvider extends ChangeNotifier {
     _loading = true;
     notifyListeners();
     _conversations = await _storage.loadConversations();
-    if (_conversations.isNotEmpty) _activeId = _conversations.first.id;
+    final savedId = await _storage.loadActiveConversationId();
+    if (savedId != null && _conversations.any((c) => c.id == savedId)) {
+      _activeId = savedId;
+    } else if (_conversations.isNotEmpty) {
+      final sorted = [..._conversations]
+        ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      _activeId = sorted.first.id;
+      await _storage.saveActiveConversationId(_activeId);
+    } else {
+      _activeId = null;
+      await _storage.saveActiveConversationId(null);
+    }
     _loading = false;
     notifyListeners();
   }
 
-  Future<void> _persist() => _storage.saveConversations(_conversations);
+  Future<void> _persist() async {
+    await _storage.saveConversations(_conversations);
+    await _storage.saveActiveConversationId(_activeId);
+  }
 
-  void selectConversation(String id) {
+  Future<void> selectConversation(String id) async {
+    if (!_conversations.any((c) => c.id == id)) return;
     _activeId = id;
+    await _storage.saveActiveConversationId(_activeId);
     notifyListeners();
   }
 
@@ -66,6 +82,7 @@ class ChatProvider extends ChangeNotifier {
   Future<void> sendMessage(
     String text, {
     List<Attachment> attachments = const [],
+    bool isEdited = false,
   }) async {
     if (text.trim().isEmpty && attachments.isEmpty) return;
     if (activeConversation == null) {
@@ -85,6 +102,7 @@ class ChatProvider extends ChangeNotifier {
       isUser: true,
       createdAt: DateTime.now(),
       attachments: attachments,
+      isEdited: isEdited,
     );
     final updated = conv.copyWith(
       messages: [...conv.messages, msg],
@@ -119,6 +137,19 @@ class ChatProvider extends ChangeNotifier {
 
   Future<void> newChat() async {
     _activeId = null;
+    await _storage.saveActiveConversationId(null);
     notifyListeners();
+  }
+
+  Future<void> resendMessage(Message m) async {
+    await sendMessage(m.content, attachments: m.attachments);
+  }
+
+  Future<void> editAndResend(Message original, String newText) async {
+    await sendMessage(
+      newText,
+      attachments: original.attachments,
+      isEdited: true,
+    );
   }
 }

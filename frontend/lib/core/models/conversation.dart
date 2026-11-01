@@ -48,6 +48,8 @@ class Message {
     required this.isUser,
     required this.createdAt,
     this.attachments = const [],
+    this.sources = const [],
+    this.isEdited = false,
   });
 
   final String id;
@@ -56,6 +58,8 @@ class Message {
   final bool isUser;
   final DateTime createdAt;
   final List<Attachment> attachments;
+  final List<String> sources;
+  final bool isEdited;
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -64,6 +68,8 @@ class Message {
     'isUser': isUser,
     'createdAt': createdAt.toIso8601String(),
     'attachments': attachments.map((a) => a.toJson()).toList(),
+    'sources': sources,
+    'isEdited': isEdited,
   };
 
   factory Message.fromJson(Map<String, dynamic> json) => Message(
@@ -75,6 +81,10 @@ class Message {
     attachments: (json['attachments'] as List<dynamic>? ?? [])
         .map((e) => Attachment.fromJson(e as Map<String, dynamic>))
         .toList(),
+    sources: (json['sources'] as List<dynamic>? ?? [])
+        .map((e) => e.toString())
+        .toList(),
+    isEdited: json['isEdited'] as bool? ?? false,
   );
 }
 

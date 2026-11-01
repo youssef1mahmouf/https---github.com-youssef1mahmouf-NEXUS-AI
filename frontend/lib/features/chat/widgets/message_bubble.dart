@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/models/conversation.dart';
+import '../../../core/services/tts_service.dart';
+import '../providers/chat_provider.dart';
 import 'attachment_preview.dart';
 
 class MessageBubble extends StatelessWidget {
-  const MessageBubble({super.key, required this.message});
+  const MessageBubble({super.key, required this.message, this.tts});
   final Message message;
+  final TextToSpeechService? tts;
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +66,17 @@ class MessageBubble extends StatelessWidget {
                   height: 1.4,
                 ),
               ),
+            if (message.isEdited)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  '(edited)',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: isUser ? Colors.white70 : scheme.onSurfaceVariant,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
             if (message.attachments.isNotEmpty) ...[
               const SizedBox(height: 8),
               Wrap(
@@ -71,9 +87,128 @@ class MessageBubble extends StatelessWidget {
                     .toList(),
               ),
             ],
+            if (message.sources.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Sources: ${message.sources.join(', ')}',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: isUser ? Colors.white70 : scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+            const SizedBox(height: 6),
+            _ActionBar(message: message, tts: tts),
           ],
         ),
       ),
     );
+  }
+}
+
+class _ActionBar extends StatelessWidget {
+  const _ActionBar({required this.message, this.tts});
+  final Message message;
+  final TextToSpeechService? tts;
+
+  Future<void> _copy(BuildContext context, String text) async {
+    await Clipboard.setData(ClipboardData(text: text));
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Copied to clipboard')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final chat = context.read<ChatProvider>();
+    final isUser = message.isUser;
+    if (isUser) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: 'Copy',
+            iconSize: 16,
+            icon: const Icon(Icons.copy),
+            onPressed: () => _copy(context, message.content),
+          ),
+          IconButton(
+            tooltip: 'Resend',
+            iconSize: 16,
+            icon: const Icon(Icons.refresh),
+            onPressed: () => chat.resendMessage(message),
+          ),
+          IconButton(
+            tooltip: 'Edit & Resend',
+            iconSize: 16,
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              final controller = TextEditingController(text: message.content);
+              final newText = await showDialog<String>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Edit message'),
+                  content: TextField(controller: controller, maxLines: 5),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Cancel'),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(ctx, controller.text),
+                      child: const Text('Resend'),
+                    ),
+                  ],
+                ),
+              );
+              if (newText != null && newText.trim().isNotEmpty) {
+                await chat.editAndResend(message, newText);
+              }
+            },
+          ),
+        ],
+      );
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          tooltip: 'Copy',
+          iconSize: 16,
+          icon: const Icon(Icons.copy),
+          onPressed: () => _copy(context, message.content),
+        ),
+        IconButton(
+          tooltip: 'Copy code',
+          iconSize: 16,
+          icon: const Icon(Icons.code),
+          onPressed: () {
+            final code = _extractCode(message.content);
+            if (code.isNotEmpty) _copy(context, code);
+          },
+        ),
+        IconButton(
+          tooltip: 'Read aloud',
+          iconSize: 16,
+          icon: const Icon(Icons.volume_up),
+          onPressed: () async {
+            final ok =
+                await (tts?.speak(message.content) ?? Future.value(false));
+            if (!ok && context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Text-to-speech not available')),
+              );
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  String _extractCode(String text) {
+    final regex = RegExp(r'```(?:\w*\n)?([\s\S]*?)```');
+    final matches = regex.allMatches(text);
+    return matches.map((m) => m.group(1)?.trim() ?? '').join('\n\n');
   }
 }
