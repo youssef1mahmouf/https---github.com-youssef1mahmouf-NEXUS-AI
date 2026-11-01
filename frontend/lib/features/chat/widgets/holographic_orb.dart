@@ -103,13 +103,26 @@ class _RingPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Guard against invalid or zero dimensions during layout transitions
+    // (e.g., AnimatedSwitcher removing the widget). Painting with a zero
+    // radius creates a degenerate rect that triggers a dart:ui assertion.
+    if (!size.width.isFinite ||
+        !size.height.isFinite ||
+        size.width <= 0 ||
+        size.height <= 0) {
+      return;
+    }
+    if (!t.isFinite) {
+      return;
+    }
+
     final center = Offset(size.width / 2, size.height / 2);
     final maxR = size.width / 2;
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2;
     for (int i = 0; i < 3; i++) {
-      final r = maxR * (0.55 + i * 0.15);
+      final r = (maxR * (0.55 + i * 0.15)).clamp(0.01, double.infinity);
       final sweep = math.pi * (1.2 + 0.4 * math.sin(t * 2 * math.pi + i));
       paint.shader = SweepGradient(
         startAngle: t * 2 * math.pi + i,
@@ -131,7 +144,7 @@ class _RingPainter extends CustomPainter {
     final dotPaint = Paint()..color = scheme.primary.withValues(alpha: 0.6);
     for (int i = 0; i < 12; i++) {
       final a = (i / 12) * 2 * math.pi + t * 2 * math.pi;
-      final r = maxR * 0.88;
+      final r = (maxR * 0.88).clamp(0.01, double.infinity);
       canvas.drawCircle(
         Offset(center.dx + r * math.cos(a), center.dy + r * math.sin(a)),
         2,
