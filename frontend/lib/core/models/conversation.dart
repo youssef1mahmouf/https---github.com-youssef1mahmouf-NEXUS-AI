@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 
 enum AttachmentType { image, video, file }
 
@@ -137,7 +137,8 @@ class Conversation {
 }
 
 // Defensive parsing helpers for backward-compatible storage migration.
-String _asString(dynamic value, String fallback) => value is String ? value : fallback;
+String _asString(dynamic value, String fallback) =>
+    value is String ? value : fallback;
 
 bool _asBool(dynamic value, bool fallback) => value is bool ? value : fallback;
 
