@@ -9,12 +9,14 @@ class WelcomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final width = MediaQuery.of(context).size.width;
+    final orbSize = (width * 0.32).clamp(180.0, 260.0);
     return Center(
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const HolographicOrb(size: 240),
+            HolographicOrb(size: orbSize),
             const SizedBox(height: 32),
             Text(
               'NEXUS AI',

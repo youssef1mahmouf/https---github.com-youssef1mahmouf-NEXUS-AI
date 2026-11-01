@@ -80,15 +80,22 @@ class ChatHomeScreen extends StatelessWidget {
               child: Column(
                 children: [
                   Expanded(
-                    child: chat.activeConversation == null
-                        ? const WelcomeView()
-                        : ListView.builder(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            itemCount: chat.activeConversation!.messages.length,
-                            itemBuilder: (ctx, i) => MessageBubble(
-                              message: chat.activeConversation!.messages[i],
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 450),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      child: _isEmptyChat(chat)
+                          ? const WelcomeView(key: ValueKey('welcome'))
+                          : ListView.builder(
+                              key: const ValueKey('messages'),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              itemCount:
+                                  chat.activeConversation!.messages.length,
+                              itemBuilder: (ctx, i) => MessageBubble(
+                                message: chat.activeConversation!.messages[i],
+                              ),
                             ),
-                          ),
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(12),
@@ -110,5 +117,10 @@ class ChatHomeScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static bool _isEmptyChat(ChatProvider chat) {
+    final conv = chat.activeConversation;
+    return conv == null || conv.messages.isEmpty;
   }
 }

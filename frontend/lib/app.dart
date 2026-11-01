@@ -41,6 +41,7 @@ class NexusApp extends StatelessWidget {
           theme: NexusTheme.light(),
           darkTheme: NexusTheme.dark(),
           themeMode: theme.mode,
+          debugShowCheckedModeBanner: false,
           home: ChatHomeScreen(
             speech: speech,
             attachments: attachments,
