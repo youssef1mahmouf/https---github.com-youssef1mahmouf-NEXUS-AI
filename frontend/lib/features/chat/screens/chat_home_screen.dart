@@ -38,6 +38,54 @@ class ChatHomeScreen extends StatelessWidget {
         (theme.mode == ThemeMode.system &&
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
 
+    // Header row with branding and controls
+    // (integrated into AppBar below)
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Back button (mobile)
+          if (MediaQuery.sizeOf(context).width < 900)
+            IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              tooltip: 'Back',
+              onPressed: () => Navigator.pop(context),
+            ),
+
+          // Branding
+          const Spacer(flex: 2),
+          Text(
+            'NEXUS-AI',
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: 4,
+            ),
+          ),
+          const Spacer(flex: 1),
+
+          // Theme toggle
+          IconButton(
+            icon: Icon(
+              theme.mode == ThemeMode.dark
+                  ? Icons.light_mode_rounded
+                  : Icons.dark_mode_rounded,
+            ),
+            tooltip: 'Toggle theme',
+            onPressed: theme.toggle,
+          ),
+        ],
+      ),
+    );
+
     return AmbientBackground(
       isDark: isDark,
       child: Scaffold(

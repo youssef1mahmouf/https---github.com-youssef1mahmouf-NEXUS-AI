@@ -17,8 +17,6 @@ class MessageBubble extends StatelessWidget {
     final isUser = message.isUser;
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    // State for hover reveal of action buttons
-    final hover = ValueNotifier<bool>(false);
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -126,14 +124,9 @@ class _ActionBar extends StatelessWidget {
     final chat = context.read<ChatProvider>();
     final isUser = message.isUser;
     if (isUser) {
-      return HoverDetector(
-        onHover: (bool isHovering) {
-          hover.value = isHovering;
-        },
-        onLongPress: () {
-          // Toggle hover state on long-press for touch devices
-          hover.value = !hover.value;
-        },
+      return Row(
+        onHover,
+        onLongPress,
         child: ValueListenableBuilder(
           valueListenable: hover,
           builder: (context, isHovering, _) {
