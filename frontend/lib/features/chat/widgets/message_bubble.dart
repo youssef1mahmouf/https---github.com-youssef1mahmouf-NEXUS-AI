@@ -125,64 +125,50 @@ class _ActionBar extends StatelessWidget {
     final isUser = message.isUser;
     if (isUser) {
       return Row(
-        onHover,
-        onLongPress,
-        child: ValueListenableBuilder(
-          valueListenable: hover,
-          builder: (context, isHovering, _) {
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                tooltip: 'Copy',
-                iconSize: 16,
-                icon: const Icon(Icons.copy),
-                onPressed: () => _copy(context, message.content),
-                color: isHovering ? null : Colors.white38,
-              ),
-              IconButton(
-                tooltip: 'Resend',
-                iconSize: 16,
-                icon: const Icon(Icons.refresh),
-                onPressed: () => context.read<ChatProvider>().resendMessage(message),
-                color: isHovering ? null : Colors.white38,
-              ),
-              IconButton(
-                tooltip: 'Edit & Resend',
-                iconSize: 16,
-                icon: const Icon(Icons.edit),
-                onPressed: () async {
-                  final controller =
-                      TextEditingController(text: message.content);
-                  final newText = await showDialog<String>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text('Edit message'),
-                      content: TextField(
-                        controller: controller,
-                        maxLines: 5,
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          child: const Text('Cancel'),
-                        ),
-                        FilledButton(
-                          onPressed: () => Navigator.pop(ctx, controller.text),
-                          child: const Text('Resend'),
-                        ),
-                      ],
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: 'Copy',
+            iconSize: 16,
+            icon: const Icon(Icons.copy),
+            onPressed: () => _copy(context, message.content),
+          ),
+          IconButton(
+            tooltip: 'Resend',
+            iconSize: 16,
+            icon: const Icon(Icons.refresh),
+            onPressed: () => chat.resendMessage(message),
+          ),
+          IconButton(
+            tooltip: 'Edit & Resend',
+            iconSize: 16,
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              final controller = TextEditingController(text: message.content);
+              final newText = await showDialog<String>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Edit message'),
+                  content: TextField(controller: controller, maxLines: 5),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Cancel'),
                     ),
-                  );
-                  if (newText != null && newText.trim().isNotEmpty) {
-                    await context.read<ChatProvider>().editAndResend(message, newText);
-                  }
-                },
-                color: isHovering ? null : Colors.white38,
-              ),
-            ],
-          );
-        },
+                    FilledButton(
+                      onPressed: () => Navigator.pop(ctx, controller.text),
+                      child: const Text('Resend'),
+                    ),
+                  ],
+                ),
+              );
+              controller.dispose();
+              if (newText != null && newText.trim().isNotEmpty) {
+                await chat.editAndResend(message, newText);
+              }
+            },
+          ),
+        ],
       );
     }
     return Row(
