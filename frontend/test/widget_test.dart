@@ -53,8 +53,8 @@ void main() {
         attachments: _FakeAttachmentService(),
         liveVoice: SimulatedLiveVoiceService(),
         themeProvider: themeProvider,
-        chatProvider: chatProvider,
         tts: NoOpTextToSpeechService(),
+        chatProvider: chatProvider,
       ),
     );
     await tester.pump();

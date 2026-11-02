@@ -26,6 +26,7 @@ class _ComposerState extends State<Composer> {
   final _ctrl = TextEditingController();
   final List<Attachment> _pending = [];
   bool _listening = false;
+  bool _isSending = false;
   @override
   void dispose() {
     _ctrl.dispose();
@@ -56,8 +57,9 @@ class _ComposerState extends State<Composer> {
     final atts = List<Attachment>.from(_pending);
     _ctrl.clear();
     _pending.clear();
-    setState(() {});
+    setState(() => _isSending = true);
     await context.read<ChatProvider>().sendMessage(text, attachments: atts);
+    setState(() => _isSending = false);
   }
 
   @override
@@ -170,9 +172,7 @@ class _ComposerState extends State<Composer> {
               ),
               const SizedBox(width: 8),
               FilledButton(
-                onPressed: context.watch<ChatProvider>().isLoading
-                    ? null
-                    : _send,
+                onPressed: _isSending ? null : _send,
                 style: FilledButton.styleFrom(
                   shape: const CircleBorder(),
                   padding: const EdgeInsets.all(14),

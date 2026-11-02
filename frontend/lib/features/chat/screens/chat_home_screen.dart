@@ -31,11 +31,13 @@ class ChatHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chat = context.watch<ChatProvider>();
+    final conversation = chat.activeConversation;
     final theme = context.watch<ThemeProvider>();
     final isDark =
         theme.mode == ThemeMode.dark ||
         (theme.mode == ThemeMode.system &&
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+
     return AmbientBackground(
       isDark: isDark,
       child: Scaffold(
@@ -44,7 +46,7 @@ class ChatHomeScreen extends StatelessWidget {
           backgroundColor: Colors.transparent,
           elevation: 0,
           title: Text(
-            chat.activeConversation?.title ?? 'Nexus AI',
+            conversation?.title ?? 'Nexus AI',
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
           actions: [
@@ -55,11 +57,11 @@ class ChatHomeScreen extends StatelessWidget {
                     ? Icons.light_mode_rounded
                     : Icons.dark_mode_rounded,
               ),
-              onPressed: () => theme.toggle(),
+              onPressed: theme.toggle,
             ),
           ],
         ),
-        drawer: MediaQuery.of(context).size.width < 900
+        drawer: MediaQuery.sizeOf(context).width < 900
             ? Drawer(
                 backgroundColor: Colors.transparent,
                 child: GlassContainer(
@@ -71,7 +73,7 @@ class ChatHomeScreen extends StatelessWidget {
             : null,
         body: Row(
           children: [
-            if (MediaQuery.of(context).size.width >= 900)
+            if (MediaQuery.sizeOf(context).width >= 900)
               GlassContainer(
                 borderRadius: 0,
                 blur: 20,
@@ -87,15 +89,15 @@ class ChatHomeScreen extends StatelessWidget {
                       duration: const Duration(milliseconds: 450),
                       switchInCurve: Curves.easeOutCubic,
                       switchOutCurve: Curves.easeInCubic,
-                      child: _isEmptyChat(chat)
+                      child:
+                          conversation == null || conversation.messages.isEmpty
                           ? const WelcomeView(key: ValueKey('welcome'))
                           : ListView.builder(
                               key: const ValueKey('messages'),
                               padding: const EdgeInsets.symmetric(vertical: 12),
-                              itemCount:
-                                  chat.activeConversation!.messages.length,
-                              itemBuilder: (ctx, i) => MessageBubble(
-                                message: chat.activeConversation!.messages[i],
+                              itemCount: conversation.messages.length,
+                              itemBuilder: (context, index) => MessageBubble(
+                                message: conversation.messages[index],
                                 tts: tts,
                               ),
                             ),
@@ -121,10 +123,5 @@ class ChatHomeScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static bool _isEmptyChat(ChatProvider chat) {
-    final conv = chat.activeConversation;
-    return conv == null || conv.messages.isEmpty;
   }
 }

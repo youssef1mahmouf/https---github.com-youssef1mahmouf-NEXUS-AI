@@ -7,8 +7,8 @@ import 'core/services/live_voice_service.dart';
 import 'core/services/speech_service.dart';
 import 'core/services/storage_service.dart';
 import 'core/services/tts_service.dart';
-import 'core/theme/theme_provider.dart';
 import 'features/chat/providers/chat_provider.dart';
+import 'core/theme/theme_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,8 +25,8 @@ Future<void> main() async {
       attachments: FilePickerAttachmentService(),
       liveVoice: SimulatedLiveVoiceService(),
       themeProvider: themeProvider,
-      chatProvider: chatProvider,
       tts: NoOpTextToSpeechService(),
+      chatProvider: chatProvider,
     ),
   );
 }

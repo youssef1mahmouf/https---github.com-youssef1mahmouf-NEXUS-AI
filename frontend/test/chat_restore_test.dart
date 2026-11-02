@@ -360,8 +360,8 @@ void main() {
     final provider = ChatProvider(storage: storage);
     await provider.load();
 
-    await provider.sendMessage('');
-    await provider.sendMessage('   ');
+    await provider.sendMessage('', attachments: const []);
+    await provider.sendMessage('   ', attachments: const []);
 
     expect(provider.activeConversation!.messages, isEmpty);
   });

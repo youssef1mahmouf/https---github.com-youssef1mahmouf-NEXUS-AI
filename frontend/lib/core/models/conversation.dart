@@ -61,6 +61,25 @@ class Message {
   final List<String> sources;
   final bool isEdited;
 
+  Message copyWith({
+    String? content,
+    bool? isUser,
+    DateTime? createdAt,
+    List<Attachment>? attachments,
+    List<String>? sources,
+    bool? isEdited,
+  }) =>
+      Message(
+    id: id,
+    conversationId: conversationId,
+    content: content ?? this.content,
+    isUser: isUser ?? this.isUser,
+    createdAt: createdAt ?? this.createdAt,
+    attachments: attachments ?? this.attachments,
+    sources: sources ?? this.sources,
+    isEdited: isEdited ?? this.isEdited,
+  );
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'conversationId': conversationId,

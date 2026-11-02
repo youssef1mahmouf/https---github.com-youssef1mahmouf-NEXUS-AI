@@ -19,8 +19,8 @@ class NexusApp extends StatelessWidget {
     required this.attachments,
     required this.liveVoice,
     required this.themeProvider,
-    required this.chatProvider,
-    this.tts,
+    required this.tts,
+    this.chatProvider,
   });
 
   final StorageService storage;
@@ -28,15 +28,17 @@ class NexusApp extends StatelessWidget {
   final AttachmentService attachments;
   final LiveVoiceService liveVoice;
   final ThemeProvider themeProvider;
-  final ChatProvider chatProvider;
   final TextToSpeechService? tts;
+  final ChatProvider? chatProvider;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
-        ChangeNotifierProvider<ChatProvider>.value(value: chatProvider),
+        ChangeNotifierProvider<ChatProvider>(
+          create: (context) => chatProvider ?? ChatProvider(storage: storage),
+        ),
       ],
       child: Consumer<ThemeProvider>(
         builder: (ctx, theme, _) => MaterialApp(
@@ -56,3 +58,7 @@ class NexusApp extends StatelessWidget {
     );
   }
 }
+
+
+
+  
