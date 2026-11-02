@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/conversation.dart';
 import '../providers/chat_provider.dart';
@@ -89,7 +89,9 @@ class _EmptyConversations extends StatelessWidget {
           Text(
             'No conversations yet',
             style: TextStyle(
-              color: isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black.withValues(alpha: 0.6),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.6)
+                  : Colors.black.withValues(alpha: 0.6),
               fontSize: 14,
             ),
           ),
@@ -97,7 +99,9 @@ class _EmptyConversations extends StatelessWidget {
           Text(
             'Start a new conversation to begin',
             style: TextStyle(
-              color: isDark ? Colors.white.withValues(alpha: 0.4) : Colors.black.withValues(alpha: 0.4),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.4)
+                  : Colors.black.withValues(alpha: 0.4),
               fontSize: 12,
             ),
           ),
@@ -170,7 +174,9 @@ class _ConversationTileState extends State<_ConversationTile> {
           trailing: PopupMenuButton<String>(
             onSelected: (v) async {
               if (v == 'rename') {
-                final ctrl = TextEditingController(text: widget.conversation.title);
+                final ctrl = TextEditingController(
+                  text: widget.conversation.title,
+                );
                 final res = await showDialog<String>(
                   context: context,
                   builder: (ctx) => AlertDialog(

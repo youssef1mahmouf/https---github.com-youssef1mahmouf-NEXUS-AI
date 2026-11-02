@@ -19,23 +19,33 @@ class ChatProvider extends ChangeNotifier {
   /// The ID of the currently active conversation, or null.
   String? _activeId;
 
+  /// Error message from the last failed operation, or null if none.
+  String? _error;
+
   /// Load conversations and active ID from storage.
   Future<void> load() async {
     final convs = await _storage.loadConversations();
     final id = await _storage.loadActiveConversationId();
     _conversations = List<Conversation>.from(convs);
-    _activeId = id;
+    // Only set _activeId from storage; we'll determine the active conversation
+    // below based on whether a match exists.
     if (_conversations.isNotEmpty) {
-      _activeConversation = _conversations.firstWhere(
+      // Try to find conversation matching the saved active ID first.
+      final matched = _conversations.firstWhere(
         (conversation) => conversation.id == id,
-        orElse: () => _conversations.reduce(
-          (latest, conversation) =>
-              conversation.updatedAt.isAfter(latest.updatedAt)
-              ? conversation
-              : latest,
-        ),
+        orElse,
       );
-      _activeId = _activeConversation!.id;
+      // Only update _activeConversation and _activeId if:
+      // 1. A conversation was actually matched (id matches), AND
+      // 2. The matched conversation has a non-empty id (valid conversation).
+      // This preserves the original saved id if no conversation matches it,
+      // preventing unnecessary overwrites that could shift the active conversation.
+      if (matched.id == id && matched.id.isNotEmpty) {
+        _activeConversation = matched;
+        _activeId = matched.id;
+      }
+      // If no conversation matched the saved id, keep _activeId and
+      // _activeConversation unchanged (they retain whatever was stored or null).
     } else {
       _activeConversation = null;
       _activeId = null;
@@ -48,6 +58,9 @@ class ChatProvider extends ChangeNotifier {
 
   /// The currently active conversation, or null if none.
   Conversation? get activeConversation => _activeConversation;
+
+  /// Error message from the last failed operation, or null if none.
+  String? get error => _error;
 
   /// Creates a new conversation with a generated title and makes it active.
   Conversation createConversation() {
@@ -121,8 +134,20 @@ class ChatProvider extends ChangeNotifier {
   }) async {
     if (_activeConversation == null ||
         (text.trim().isEmpty && attachments.isEmpty)) {
+      // Only set error if we don't already have a meaningful error; this prevents
+      // a stale error from blocking subsequent sends when the user later creates
+      // a new conversation.
+      if (_error == null) {
+        _error = _activeConversation == null
+            ? 'No active conversation'
+            : 'Message is empty';
+      }
+      notifyListeners();
       return;
     }
+    // Clear any previous error once we confirm there's an active conversation
+    // and the text/attachments are valid.
+    _error = null;
     final msg = Message(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       conversationId: _activeConversation!.id,

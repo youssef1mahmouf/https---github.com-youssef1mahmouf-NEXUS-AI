@@ -68,8 +68,7 @@ class Message {
     List<Attachment>? attachments,
     List<String>? sources,
     bool? isEdited,
-  }) =>
-      Message(
+  }) => Message(
     id: id,
     conversationId: conversationId,
     content: content ?? this.content,

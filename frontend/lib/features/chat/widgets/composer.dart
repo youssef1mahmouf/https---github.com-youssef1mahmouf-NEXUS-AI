@@ -55,15 +55,34 @@ class _ComposerState extends State<Composer> {
   Future<void> _send() async {
     final text = _ctrl.text;
     final atts = List<Attachment>.from(_pending);
-    _ctrl.clear();
-    _pending.clear();
+    final chat = context.read<ChatProvider>();
     setState(() => _isSending = true);
+
+    // Check if we have an active conversation and something to send.
+    // We do NOT check hasError here because sendMessage() in the provider
+    // will handle error setting/clearing appropriately; blocking here with a
+    // stale error would prevent the user from sending after creating a new conversation.
+    final hasActiveConv = chat.activeConversation != null;
+    final hasTextOrAttachments = text.trim().isNotEmpty || atts.isNotEmpty;
+
+    if (!hasActiveConv || !hasTextOrAttachments) {
+      setState(() => _isSending = false);
+      return;
+    }
+
     await context.read<ChatProvider>().sendMessage(text, attachments: atts);
     setState(() => _isSending = false);
+
+    // Only clear input if no error occurred (checked via provider after rebuild)
+    if (chat.error == null) {
+      _ctrl.clear();
+      _pending.clear();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final chat = context.watch<ChatProvider>();
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       child: Column(
@@ -181,6 +200,18 @@ class _ComposerState extends State<Composer> {
               ),
             ],
           ),
+          if (chat.error?.isNotEmpty == true)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                chat.error!,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontSize: 12,
+                  height: 1.2,
+                ),
+              ),
+            ),
         ],
       ),
     );
