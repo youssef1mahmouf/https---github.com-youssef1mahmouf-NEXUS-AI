@@ -27,25 +27,18 @@ class ChatProvider extends ChangeNotifier {
     final convs = await _storage.loadConversations();
     final id = await _storage.loadActiveConversationId();
     _conversations = List<Conversation>.from(convs);
-    // Only set _activeId from storage; we'll determine the active conversation
-    // below based on whether a match exists.
     if (_conversations.isNotEmpty) {
-      // Try to find conversation matching the saved active ID first.
       final matched = _conversations.firstWhere(
         (conversation) => conversation.id == id,
-        orElse,
+        orElse: () => _conversations.reduce(
+          (latest, conversation) =>
+              conversation.updatedAt.isAfter(latest.updatedAt)
+              ? conversation
+              : latest,
+        ),
       );
-      // Only update _activeConversation and _activeId if:
-      // 1. A conversation was actually matched (id matches), AND
-      // 2. The matched conversation has a non-empty id (valid conversation).
-      // This preserves the original saved id if no conversation matches it,
-      // preventing unnecessary overwrites that could shift the active conversation.
-      if (matched.id == id && matched.id.isNotEmpty) {
-        _activeConversation = matched;
-        _activeId = matched.id;
-      }
-      // If no conversation matched the saved id, keep _activeId and
-      // _activeConversation unchanged (they retain whatever was stored or null).
+      _activeConversation = matched;
+      _activeId = matched.id;
     } else {
       _activeConversation = null;
       _activeId = null;
@@ -137,11 +130,9 @@ class ChatProvider extends ChangeNotifier {
       // Only set error if we don't already have a meaningful error; this prevents
       // a stale error from blocking subsequent sends when the user later creates
       // a new conversation.
-      if (_error == null) {
-        _error = _activeConversation == null
-            ? 'No active conversation'
-            : 'Message is empty';
-      }
+      _error ??= _activeConversation == null
+          ? 'No active conversation'
+          : 'Message is empty';
       notifyListeners();
       return;
     }

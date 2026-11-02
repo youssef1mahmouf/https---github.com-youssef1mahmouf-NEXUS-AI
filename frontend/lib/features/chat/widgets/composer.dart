@@ -65,12 +65,24 @@ class _ComposerState extends State<Composer> {
     final hasActiveConv = chat.activeConversation != null;
     final hasTextOrAttachments = text.trim().isNotEmpty || atts.isNotEmpty;
 
-    if (!hasActiveConv || !hasTextOrAttachments) {
+    if (!hasTextOrAttachments) {
       setState(() => _isSending = false);
       return;
     }
 
-    await context.read<ChatProvider>().sendMessage(text, attachments: atts);
+    // If there's no active conversation, create a new one automatically.
+    // This enables the "type and send immediately" flow without requiring
+    // the user to explicitly click "New Conversation" first.
+    if (!hasActiveConv) {
+      // Create a new conversation automatically
+      chat.createConversation();
+      // Now send the message into this new conversation
+      await context.read<ChatProvider>().sendMessage(text, attachments: atts);
+    } else {
+      // There's an active conversation - send message into it
+      await context.read<ChatProvider>().sendMessage(text, attachments: atts);
+    }
+
     setState(() => _isSending = false);
 
     // Only clear input if no error occurred (checked via provider after rebuild)
