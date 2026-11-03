@@ -75,7 +75,8 @@ class _ComposerState extends State<Composer> {
     // the user to explicitly click "New Conversation" first.
     if (!hasActiveConv) {
       // Create a new conversation automatically
-      chat.createConversation();
+      await chat.createConversation();
+      if (!mounted) return;
       // Now send the message into this new conversation
       await context.read<ChatProvider>().sendMessage(text, attachments: atts);
     } else {
