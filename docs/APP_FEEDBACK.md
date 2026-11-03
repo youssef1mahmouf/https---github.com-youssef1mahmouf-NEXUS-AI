@@ -100,4 +100,22 @@ Latest run: `flutter test` -> 30 tests passed; `pytest` -> 1 passed; `flutter an
 - Add error reporting/logging for failed provider calls.
 
 ## Phase 1 Update
+
+## Phase 2A Acceptance Verification
+- Dictation: Implemented (speech_to_text plugin). Runtime: plugin loads on Windows (`SpeechToTextWindowsPlugin created`), but actual speech transcription cannot be automated without a microphone. Does NOT auto-send (correct).
+- Live Voice: Implemented (RealLiveVoiceService: STT → /chat → AI reply → TTS). Runtime: backend /chat real replies verified; full voice loop not automatable without mic/speaker. Sequential, not streaming.
+- TTS: Implemented (FlutterTextToSpeechService via flutter_tts). **Windows desktop build blocker RESOLVED** — `flutter build windows` now succeeds with `frontend/tools/nuget.exe` + `frontend/NuGet.Config` (local NuGet cache source pointing to cached `Microsoft.Windows.CppWinRT 2.0.210503.1`). Root cause was missing `nuget.exe` on PATH and no configured package source for the local cache. TTS plugin compiled into Windows binary; actual speech playback not audio-verified (no speaker automation). Works on mobile per flutter_tts.
+- Backend: /health, /models, /chat all verified with real Ollama qwen3:4b replies.
+- Regression: flutter analyze clean; flutter test 30 passed; pytest 9 passed.
+
+## Phase 2A Update
+Functional voice, chat UX & backend reliability complete:
+- Real dictation (speech_to_text) inserts text into composer; no auto-send.
+- Real Live Voice: STT → backend /chat → AI reply → TTS (flutter_tts), with states.
+- Backend /models, structured logging, validation, error handling.
+- Header: New Conversation (+), theme toggle; title shows conversation or "Nexus AI".
+- Async persistence race fixed; conversation switching during requests guarded.
+- flutter analyze clean; flutter test 30 passed; pytest 9 passed.
+- Flutter app runs on Windows desktop; real Ollama chat verified; STT plugin initialized.
+- Platform note: flutter_tts Windows build needs nuget.exe; TTS works on mobile without it.
 Core chat now connected to backend with real Ollama (qwen3:4b) replies. See PROJECT_STATUS.md.

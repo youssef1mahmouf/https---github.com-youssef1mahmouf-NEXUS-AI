@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app.dart';
 import 'core/services/api_service.dart';
 import 'core/services/attachment_service.dart';
-import 'core/services/live_voice_service.dart';
+import 'core/services/real_live_voice_service.dart';
 import 'core/services/speech_service.dart';
 import 'core/services/storage_service.dart';
 import 'core/services/tts_service.dart';
@@ -22,16 +22,23 @@ Future<void> main() async {
     apiService: ChatApiService(),
   );
   await chatProvider.load();
+  final tts = FlutterTextToSpeechService();
+  final liveVoice = RealLiveVoiceService(
+    api: ChatApiService(),
+    chatProvider: chatProvider,
+    tts: tts,
+  );
   runApp(
     NexusApp(
       storage: storage,
       speech: SpeechToTextService(),
       attachments: FilePickerAttachmentService(),
-      liveVoice: SimulatedLiveVoiceService(),
+      liveVoice: liveVoice,
       themeProvider: themeProvider,
-      tts: NoOpTextToSpeechService(),
+      tts: tts,
       chatProvider: chatProvider,
     ),
   );
 }
+
 

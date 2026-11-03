@@ -1,6 +1,6 @@
 import 'dart:async';
 
-enum LiveVoiceState { idle, connecting, listening, speaking, error }
+enum LiveVoiceState { idle, connecting, listening, speaking, error, thinking }
 
 abstract class LiveVoiceService {
   LiveVoiceState get state;
