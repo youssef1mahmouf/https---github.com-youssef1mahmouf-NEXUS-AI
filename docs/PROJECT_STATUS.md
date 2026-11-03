@@ -35,11 +35,14 @@
 
 **Fix applied (project-level, non-destructive):**
 
-1. `frontend/tools/nuget.exe` — nuget.exe added to the project.
-2. `frontend/NuGet.Config` — package source pointing to the local NuGet cache.
-3. `nuget.exe` must be on PATH for `flutter build windows` / `flutter run -d windows`.
+1. `frontend/tools/nuget.exe` — nuget.exe committed to the repo (8.7 MB).
+2. `frontend/NuGet.Config` — uses `%USERPROFILE%\.nuget\packages` (portable across Windows machines); removed `<clear />` from `packageSources` so nuget.org remains available as fallback for missing packages.
+3. `frontend/build_windows.ps1` — project-level build script that adds `frontend/tools/` to PATH (making nuget.exe discoverable to CMake), runs `flutter pub get` and `flutter build windows --release`, and verifies the output executable exists.
+4. Build command (from `frontend/`): `.uild_windows.ps1`
 
-**Verification:** `flutter build windows` now succeeds (`√ Built build\windows\x64\runner\Release\nxus_ai.exe`). The app launches on Windows desktop and `SpeechToTextWindowsPlugin` initializes. TTS plugin code is compiled into the binary; actual speech playback requires speakers/audio output and was not automated in this environment.
+**Verification:** Clean-state `flutter build windows` succeeded via `.uild_windows.ps1` (`√ Built build\windows\x64\runner\Release\nxus_ai.exe`). The app launches on Windows desktop and `SpeechToTextWindowsPlugin` initializes. TTS plugin code is compiled into the binary; actual speech playback requires speakers/audio output and was not automated in this environment.
+
+**Can another Windows developer build after cloning?** Yes, provided they have: Flutter SDK in PATH, Visual Studio with C++ desktop workload, Windows 10 SDK. No manual path editing required — `.uild_windows.ps1` handles nuget.exe discovery.
 
 ### Remaining Limitations
 

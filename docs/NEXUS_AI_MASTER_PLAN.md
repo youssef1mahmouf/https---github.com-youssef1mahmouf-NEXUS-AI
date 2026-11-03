@@ -13,7 +13,7 @@
 
 - Real Speech-to-Text dictation (speech_to_text) → inserts into composer, no auto-send; start/stop/cancel/permission via plugin.
 - Real Live Voice conversation (RealLiveVoiceService): STT → /chat → AI reply → TTS (flutter_tts); sequential (not streaming).
-- FlutterTextToSpeechService (real TTS); NoOp fallback. **Windows TTS build blocker RESOLVED** — `frontend/tools/nuget.exe` + `frontend/NuGet.Config` (local cache source) enable `flutter build windows` to succeed; TTS plugin compiled into binary. Actual speech playback not audio-verified (no speaker automation).
+- FlutterTextToSpeechService (real TTS); NoOp fallback. **Windows TTS build blocker RESOLVED (portable)** — `frontend/tools/nuget.exe` + `frontend/NuGet.Config` (%USERPROFILE% cache source, portable) + `frontend/build_windows.ps1` (adds tools/ to PATH) enable `.uild_windows.ps1` to succeed; TTS plugin compiled into binary. Actual speech playback not audio-verified (no speaker automation). Clean-state `flutter build windows` verified via build script.
 - Backend /models endpoint; structured logging; input validation + error handling.
 - Header: New Conversation (+) button, theme toggle, title.
 - Async persistence race fixed; conversation switching during requests guarded.
