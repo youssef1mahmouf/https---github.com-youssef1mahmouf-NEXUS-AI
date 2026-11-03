@@ -6,6 +6,7 @@ Generated from a full review of the current working tree (frontend + backend),
 ## 1. Application Options (what the user can do today)
 
 ### UI / Navigation
+
 - Toggle light/dark theme (AppBar button).
 - Open conversation sidebar (drawer on <900px width, fixed panel otherwise).
 - Create / rename / delete conversations (via sidebar + provider).
@@ -17,6 +18,7 @@ Generated from a full review of the current working tree (frontend + backend),
 - View messages in a scrollable list; welcome view when empty.
 
 ### Backend
+
 - `GET /health` returns `{"status":"ok","service":"nexus-ai-backend"}`.
 - CORS configured for all origins (development).
 
@@ -79,12 +81,14 @@ Generated from a full review of the current working tree (frontend + backend),
 ## 6. Real Tests Added
 
 New test files (all passing):
+
 - `frontend/test/storage_service_test.dart`
 - `frontend/test/theme_provider_test.dart`
 - `frontend/test/live_voice_service_test.dart`
 - `frontend/test/conversation_codec_test.dart`
 
 Existing tests still passing:
+
 - `frontend/test/chat_restore_test.dart`
 - `frontend/test/holographic_orb_regression_test.dart`
 - `frontend/test/widget_test.dart`
@@ -102,6 +106,7 @@ Latest run: `flutter test` -> 30 tests passed; `pytest` -> 1 passed; `flutter an
 ## Phase 1 Update
 
 ## Phase 2A Acceptance Verification
+
 - Dictation: Implemented (speech_to_text plugin). Runtime: plugin loads on Windows (`SpeechToTextWindowsPlugin created`), but actual speech transcription cannot be automated without a microphone. Does NOT auto-send (correct).
 - Live Voice: Implemented (RealLiveVoiceService: STT → /chat → AI reply → TTS). Runtime: backend /chat real replies verified; full voice loop not automatable without mic/speaker. Sequential, not streaming.
 - TTS: Implemented (FlutterTextToSpeechService via flutter_tts). **Windows desktop build blocker RESOLVED** — `flutter build windows` now succeeds with `frontend/tools/nuget.exe` + `frontend/NuGet.Config` (local NuGet cache source pointing to cached `Microsoft.Windows.CppWinRT 2.0.210503.1`). Root cause was missing `nuget.exe` on PATH and no configured package source for the local cache. TTS plugin compiled into Windows binary; actual speech playback not audio-verified (no speaker automation). Works on mobile per flutter_tts.
@@ -109,7 +114,9 @@ Latest run: `flutter test` -> 30 tests passed; `pytest` -> 1 passed; `flutter an
 - Regression: flutter analyze clean; flutter test 30 passed; pytest 9 passed.
 
 ## Phase 2A Update
+
 Functional voice, chat UX & backend reliability complete:
+
 - Real dictation (speech_to_text) inserts text into composer; no auto-send.
 - Real Live Voice: STT → backend /chat → AI reply → TTS (flutter_tts), with states.
 - Backend /models, structured logging, validation, error handling.
