@@ -12,8 +12,7 @@ import '../providers/chat_provider.dart';
 import '../widgets/composer.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/sidebar.dart';
-import '../widgets/header.dart';
-import '../widgets/pages_sidebar.dart';
+
 
 class ChatHomeScreen extends StatelessWidget {
   const ChatHomeScreen({
@@ -32,9 +31,6 @@ class ChatHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chat = context.watch<ChatProvider>();
-    final _pagesSidebarVisible = false;
-    final _conversationsSidebarVisible = false;
-    final _currentPage = 'chat';
     final conversation = chat.activeConversation;
     final theme = context.watch<ThemeProvider>();
     final isDark =
@@ -95,7 +91,16 @@ class ChatHomeScreen extends StatelessWidget {
                       switchOutCurve: Curves.easeInCubic,
                       child:
                           conversation == null || conversation.messages.isEmpty
-                          ? const WelcomeView(key: ValueKey('welcome'))
+                          ? const Center(
+                              key: ValueKey('welcome'),
+                              child: Text(
+                                'Start a conversation to begin',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            )
                           : ListView.builder(
                               key: const ValueKey('messages'),
                               padding: const EdgeInsets.symmetric(vertical: 12),
