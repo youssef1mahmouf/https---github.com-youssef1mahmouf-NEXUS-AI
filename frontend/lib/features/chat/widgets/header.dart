@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/theme_provider.dart';
-
 /// Standalone application header with branding and sidebar toggle buttons.
 /// Placed above the workspace, visually separate from the main content.
 class NexusHeader extends StatelessWidget {

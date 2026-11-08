@@ -9,26 +9,26 @@ class PagesSidebar extends StatelessWidget {
   });
 
   // Page definitions
-  static final List<_Page> _pages = [
-    _Page(
+  static final List<Page> _pages = [
+    Page(
       id: 'chat',
       label: 'Chat',
       icon: Icons.chat,
       // Route to ChatHomeScreen
     ),
-    _Page(
+    Page(
       id: 'dashboard',
       label: 'Dashboard',
       icon: Icons.dashboard,
       // Placeholder page
     ),
-    _Page(
+    Page(
       id: 'tasks',
       label: 'Tasks',
       icon: Icons.task,
       // Placeholder page
     ),
-    _Page(
+    Page(
       id: 'settings',
       label: 'Settings',
       icon: Icons.settings,
@@ -37,7 +37,7 @@ class PagesSidebar extends StatelessWidget {
   ];
 
   /// Find a page by its ID.
-  static _Page? findPage(String id) {
+  static Page? findPage(String id) {
     for (final page in _pages) {
       if (page.id == id) return page;
     }
@@ -76,12 +76,12 @@ class PagesSidebar extends StatelessWidget {
   }
 }
 
-class _Page {
+class Page {
   final String id;
   final String label;
   final IconData icon;
   // The route/navigation target would be defined per implementation
-  _Page({
+  Page({
     required this.id,
     required this.label,
     required this.icon,
@@ -91,7 +91,7 @@ class _Page {
 /// Builds a list of navigation tiles for the Pages Sidebar.
 ListTile _buildNavigationTile(
   BuildContext context,
-  _Page page, {
+  Page page, {
   required bool isSelected,
   required VoidCallback onSelect,
 }) {
