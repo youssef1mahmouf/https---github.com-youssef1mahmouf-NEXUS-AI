@@ -15,7 +15,6 @@ class NexusHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final scheme = Theme.of(context).colorScheme;
 
     return Container(
       color: isDark
