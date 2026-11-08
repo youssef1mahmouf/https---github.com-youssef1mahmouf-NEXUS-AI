@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -65,5 +66,51 @@ class ChatApiService {
     }
     final data = jsonDecode(res.body) as Map<String, dynamic>;
     return data['reply'] as String;
+  }
+
+  Stream<String> chatStream({
+    required String message,
+    String? conversationId,
+    List<Map<String, String>> history = const [],
+    String? model,
+  }) async* {
+    final client = http.Client();
+    try {
+      final request = http.Request(
+        'POST',
+        _uri('/chat/stream'),
+      )
+        ..headers['Content-Type'] = 'application/json'
+        ..body = jsonEncode({
+          'message': message,
+          'conversation_id': conversationId,
+          'history': history,
+          'model': model,
+        });
+      final streamed = await client.send(request).timeout(const Duration(seconds: 120));
+      if (streamed.statusCode != 200) {
+        final body = await utf8.decoder.bind(streamed.stream).join();
+        throw ChatApiException(body, statusCode: streamed.statusCode);
+      }
+      await for (final line in utf8.decoder
+          .bind(streamed.stream)
+          .transform(const LineSplitter())) {
+        if (line.isEmpty) continue;
+        final payload = line.startsWith('data: ') ? line.substring(6) : line;
+        if (payload == '[DONE]') break;
+        try {
+          final decoded = jsonDecode(payload) as Map<String, dynamic>;
+          if (decoded.containsKey('error')) {
+            throw ChatApiException(decoded['error'].toString());
+          }
+          final reply = decoded['reply'];
+          if (reply != null) yield reply as String;
+        } on FormatException {
+          continue;
+        }
+      }
+    } finally {
+      client.close();
+    }
   }
 }

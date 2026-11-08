@@ -1,10 +1,15 @@
 # Nexus AI — Roadmap
 
 ## Phase 1: Understand existing (DONE)
+
 ## Phase 2: Documentation (DONE)
+
 ## Phase 3: Backup and remove old folders (DONE - backup created)
+
 ## Phase 4: Clean structure (DONE)
+
 ## Phase 5: Incremental rebuild
+
 1. Project structure and docs (DONE)
 2. Flutter frontend setup (IN PROGRESS)
 3. Python backend setup (IN PROGRESS)
@@ -25,4 +30,5 @@
 18. Tests and docs
 
 ## Phase 6: GitHub integration (IN PROGRESS)
+
 ## Phase 7: Development rules (ONGOING)

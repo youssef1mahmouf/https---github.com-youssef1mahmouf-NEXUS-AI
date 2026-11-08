@@ -3,12 +3,14 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("nexus-ai-backend")
 
+import json
 import os
 import uuid
 from typing import List, Optional
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from config import API_HOST, API_PORT, DEFAULT_MODEL, UPLOAD_DIR
@@ -16,10 +18,11 @@ import ai
 
 app = FastAPI(title="Nexus AI Backend", version="1.0.0")
 
+_cors_origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -92,4 +95,26 @@ async def upload(file: UploadFile = File(...)):
     with open(path, "wb") as f:
         f.write(data)
     return UploadResponse(id=attachment_id, filename=safe_name, size=len(data))
+
+
+@app.post("/chat/stream")
+async def chat_stream(req: ChatRequest):
+    if not req.message.strip():
+        raise HTTPException(status_code=400, detail="Message is empty")
+    messages = [{"role": m.role, "content": m.content} for m in req.history]
+    messages.append({"role": "user", "content": req.message})
+    conversation_id = req.conversation_id or str(uuid.uuid4())
+    model = req.model or DEFAULT_MODEL
+    logger.info("chat stream request conversation=%s model=%s", conversation_id, model)
+
+    async def event_generator():
+        try:
+            for chunk in ai.chat_stream(messages, model=model):
+                yield f"data: {json.dumps({'reply': chunk, 'conversation_id': conversation_id, 'model': model})}\n\n"
+            yield "data: [DONE]\n\n"
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("AI stream failure")
+            yield f"data: {json.dumps({'error': str(exc)})}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 

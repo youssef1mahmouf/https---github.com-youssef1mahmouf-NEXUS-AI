@@ -1,3 +1,5 @@
+import json
+
 import requests
 
 from config import OLLAMA_BASE_URL, DEFAULT_MODEL, REQUEST_TIMEOUT
@@ -33,3 +35,28 @@ class OllamaProvider:
         if not content:
             raise RuntimeError("Empty response from Ollama")
         return content, selected
+
+    def chat_stream(self, messages, model=None):
+        selected = model or self.default_model
+        url = f"{self.base_url}/api/chat"
+        payload = {"model": selected, "messages": messages, "stream": True}
+        response = requests.post(url, json=payload, timeout=self.timeout, stream=True)
+        response.raise_for_status()
+        for line in response.iter_lines():
+            if not line:
+                continue
+            text = line.decode("utf-8").strip()
+            if not text:
+                continue
+            if text.startswith("data: "):
+                text = text[6:]
+            if text == "[DONE]":
+                break
+            try:
+                data = json.loads(text)
+            except json.JSONDecodeError:
+                continue
+            message = data.get("message") or {}
+            content = message.get("content")
+            if content:
+                yield content

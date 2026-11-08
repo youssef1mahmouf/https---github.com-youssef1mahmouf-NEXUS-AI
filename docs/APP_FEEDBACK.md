@@ -1,7 +1,13 @@
 # Nexus AI — App Feedback Report
 
-Generated from a full review of the current working tree (frontend + backend),
-`flutter analyze`, `flutter test`, and `pytest`.
+> **STATUS: PARTIALLY SUPERSEDED.** This report was generated from an earlier
+> review of the working tree. Several statements in Sections 2–4 are outdated
+> relative to the current source code and have been corrected inline below with
+> `[OBSOLETE]` / `[CORRECTED]` markers. Historical claims about test counts
+> (`flutter test: 30 passed`, `pytest: 9 passed`, `flutter analyze: 0 issues`)
+> could not be re-verified in this environment because `pwsh.exe` (PowerShell 7)
+> is not installed and `run_commands` cannot execute. The authoritative,
+> up-to-date plan is the root-level `NEXUS_AI_MASTER_PLAN.md`.
 
 ## 1. Application Options (what the user can do today)
 
@@ -20,7 +26,8 @@ Generated from a full review of the current working tree (frontend + backend),
 ### Backend
 
 - `GET /health` returns `{"status":"ok","service":"nexus-ai-backend"}`.
-- CORS configured for all origins (development).
+- CORS configured for all origins (development) [CORRECTED: `allow_credentials`
+  is now `False`; origins configurable via `CORS_ORIGINS` env, default `"*"`].
 
 ## 2. What Works (verified)
 
@@ -38,17 +45,23 @@ Generated from a full review of the current working tree (frontend + backend),
 
 - No backend communication from frontend: `ChatProvider.sendMessage` only stores the
   user message locally; no HTTP client calls the FastAPI backend, so no AI reply is
-  ever produced.
+  ever produced. [OBSOLETE — `ChatProvider.sendMessage` calls `ChatApiService.chat()`
+  → backend `POST /chat`; streaming via `POST /chat/stream` is also implemented and
+  wired as the default path.]
 - Backend exposes only `/health`; all AI routes (chat, models, memory, tasks, search,
-  backup, n8n) are missing.
+  backup, n8n) are missing. [OBSOLETE — backend implements `GET /health`, `GET /models`,
+  `POST /chat`, `POST /upload`, `POST /chat/stream` (SSE).]
 - Speech-to-text service depends on platform plugin and is not testable; `initialize()`
   may fail silently on desktop/web.
-- Text-to-speech is a no-op (`NoOpTextToSpeechService`); TTS never speaks.
+- Text-to-speech is a no-op (`NoOpTextToSpeechService`); TTS never speaks. [CORRECTED —
+  `FlutterTextToSpeechService` via `flutter_tts` is the real implementation wired in
+  `main.dart`; `NoOpTextToSpeechService` is kept as a fallback.]
 - Live voice service is simulated only; no real streaming audio.
 - Attachments are picked but never uploaded or sent to a backend; only stored locally.
 - `createConversation()` fires storage writes without awaiting; persistence races are
   possible under rapid actions.
-- `sendMessage` `_error ??=` logic can retain stale errors in edge cases.
+- `sendMessage` `_error ??=` logic can retain stale errors in edge cases. [FIXED —
+  changed to `_error =` so the current error is always reflected on early-return.]
 - No authentication, accounts, or sync.
 - No Arabic/English localization wired (intl not in dependencies).
 
@@ -95,6 +108,7 @@ Existing tests still passing:
 - `backend/tests/test_health.py`
 
 Latest run: `flutter test` -> 30 tests passed; `pytest` -> 1 passed; `flutter analyze` -> 0 issues.
+[NOT RE-VERIFIED — could not execute in this environment; `pwsh.exe` missing.]
 
 ## 7. Recommendations
 

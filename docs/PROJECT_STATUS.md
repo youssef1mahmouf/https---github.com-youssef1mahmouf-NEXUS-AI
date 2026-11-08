@@ -1,5 +1,12 @@
 # Project Status
 
+> **STATUS: PARTIALLY SUPERSEDED.** Historical claims in this file about test
+> counts (`flutter analyze: 0 issues`, `flutter test: 30 passed`, `pytest: 9
+> passed`) and runtime verification could not be re-verified in this environment
+> because `pwsh.exe` (PowerShell 7) is not installed and `run_commands` cannot
+> execute. Such claims are marked `[NOT RE-VERIFIED]`. The authoritative,
+> up-to-date plan is the root-level `NEXUS_AI_MASTER_PLAN.md`.
+
 ## Phase 1 (Core Chat) — DONE
 
 ## Phase 2A (Functional Voice, Chat UX & Backend Reliability) — DONE (acceptance-verified, with platform caveats)
@@ -18,16 +25,16 @@
 
 ### Test Results
 
-- flutter analyze: No issues found.
-- flutter test: 30 passed.
-- pytest: 9 passed.
+- flutter analyze: No issues found. [NOT RE-VERIFIED]
+- flutter test: 30 passed. [NOT RE-VERIFIED]
+- pytest: 9 passed. [NOT RE-VERIFIED]
 
 ### Runtime Verification (verified)
 
-- Backend /health: `{"status":"ok",...}` ✓
-- Backend /models: 4 models incl. `qwen3:4b` ✓
-- Real /chat reply via Ollama qwen3:4b: `"Hello! I'm here to help. 😊 How can I assist you today?"` ✓
-- Flutter app previously built & ran on Windows; `SpeechToTextWindowsPlugin` initialized (dictation supported) ✓
+- Backend /health: `{"status":"ok",...}` ✓ [NOT RE-VERIFIED]
+- Backend /models: 4 models incl. `qwen3:4b` ✓ [NOT RE-VERIFIED]
+- Real /chat reply via Ollama qwen3:4b: `"Hello! I'm here to help. 😊 How can I assist you today?"` ✓ [NOT RE-VERIFIED]
+- Flutter app previously built & ran on Windows; `SpeechToTextWindowsPlugin` initialized (dictation supported) ✓ [NOT RE-VERIFIED]
 
 ### Windows TTS Blocker — RESOLVED
 
@@ -39,6 +46,7 @@
 2. `frontend/NuGet.Config` — uses `%USERPROFILE%\.nuget\packages` (portable across Windows machines); removed `<clear />` from `packageSources` so nuget.org remains available as fallback for missing packages.
 3. `frontend/build_windows.ps1` — project-level build script that adds `frontend/tools/` to PATH (making nuget.exe discoverable to CMake), runs `flutter pub get` and `flutter build windows --release`, and verifies the output executable exists.
 4. Build command (from `frontend/`): `.uild_windows.ps1`
+**[NOT RE-VERIFIED]** The historical build and runtime verification claims in this file could not be re-executed in this environment because `pwsh.exe` (PowerShell 7) is not installed.
 
 **Verification:** Clean-state `flutter build windows` succeeded via `.uild_windows.ps1` (`√ Built build\windows\x64\runner\Release\nxus_ai.exe`). The app launches on Windows desktop and `SpeechToTextWindowsPlugin` initializes. TTS plugin code is compiled into the binary; actual speech playback requires speakers/audio output and was not automated in this environment.
 
@@ -59,4 +67,6 @@
 
 ### Next Phase
 
-Phase 2B/3: Settings screen, SQLite migration, localization, CI, streaming live voice.
+Phase 2B/3: Settings screen, SQLite migration, localization, CI. (Streaming
+chat is implemented and wired as the default path; runtime verification
+blocked by missing pwsh.exe.)

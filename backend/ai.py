@@ -14,3 +14,7 @@ def list_models():
 
 def chat(messages, model=None):
     return _provider.chat(messages, model=model)
+
+
+def chat_stream(messages, model=None):
+    return _provider.chat_stream(messages, model=model)

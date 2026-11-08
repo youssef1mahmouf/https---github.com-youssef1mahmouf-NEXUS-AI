@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:nexus_ai/core/models/conversation.dart';
 import 'package:nexus_ai/core/services/api_service.dart';
@@ -15,6 +17,9 @@ class ChatProvider extends ChangeNotifier {
   String? _activeId;
   String? _error;
   bool _isLoading = false;
+  bool _isStreaming = false;
+  String? _streamingMessageId;
+  bool _streamCancelled = false;
 
   Future<void> load() async {
     final convs = await _storage.loadConversations();
@@ -43,6 +48,8 @@ class ChatProvider extends ChangeNotifier {
   Conversation? get activeConversation => _activeConversation;
   String? get error => _error;
   bool get isLoading => _isLoading;
+  bool get isStreaming => _isStreaming;
+  String? get streamingMessageId => _streamingMessageId;
 
   Future<Conversation> createConversation() async {
     final now = DateTime.now();
@@ -106,11 +113,14 @@ class ChatProvider extends ChangeNotifier {
   Future<void> sendMessage(
     String text, {
     List<Attachment> attachments = const [],
+    bool stream = true,
   }) async {
-    if (_isLoading) return;
+    // Block concurrent operations: never start a new send while loading or
+    // streaming. This prevents duplicate/overlapping assistant messages.
+    if (_isLoading || _isStreaming) return;
     final conv = _activeConversation;
     if (conv == null || (text.trim().isEmpty && attachments.isEmpty)) {
-      _error ??= conv == null ? 'No active conversation' : 'Message is empty';
+      _error = conv == null ? 'No active conversation' : 'Message is empty';
       notifyListeners();
       return;
     }
@@ -138,6 +148,14 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
 
     if (_api == null) return;
+
+    if (stream) {
+      return _sendMessageStream(
+        text: text,
+        conversationId: conversationId,
+        previousMessages: previousMessages,
+      );
+    }
 
     _isLoading = true;
     notifyListeners();
@@ -178,6 +196,112 @@ class ChatProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  /// Streams the assistant reply progressively into an assistant message
+  /// placeholder, updating the UI chunk by chunk. On completion the message is
+  /// persisted; on error the partial content is retained and [_error] is set.
+  /// Cancellation is honored via [_streamCancelled], set by [cancelStream].
+  Future<void> _sendMessageStream({
+    required String text,
+    required String conversationId,
+    required List<Message> previousMessages,
+  }) async {
+    // Nullable API service: tests instantiate ChatProvider without one.
+    // Fail closed with a controlled error instead of a runtime crash.
+    if (_api == null) {
+      _error = 'No API service available';
+      _isStreaming = false;
+      _streamingMessageId = null;
+      notifyListeners();
+      return;
+    }
+
+    _isStreaming = true;
+    _streamCancelled = false;
+    notifyListeners();
+
+    // Create a placeholder assistant message so the UI can show progressive
+    // streaming content immediately.
+    final placeholderId = DateTime.now().microsecondsSinceEpoch.toString();
+    _streamingMessageId = placeholderId;
+    final placeholder = Message(
+      id: placeholderId,
+      conversationId: conversationId,
+      content: '',
+      isUser: false,
+      createdAt: DateTime.now(),
+    );
+    final targetIdx = _conversations.indexWhere((c) => c.id == conversationId);
+    if (targetIdx < 0) {
+      _isStreaming = false;
+      _streamingMessageId = null;
+      notifyListeners();
+      return;
+    }
+    final target = _conversations[targetIdx];
+    final withPlaceholder = target.copyWith(
+      messages: [...target.messages, placeholder],
+      updatedAt: DateTime.now(),
+    );
+    _conversations[targetIdx] = withPlaceholder;
+    if (_activeConversation?.id == conversationId) {
+      _activeConversation = withPlaceholder;
+    }
+    await _storage.saveConversations(_conversations);
+    notifyListeners();
+
+    try {
+      final history = previousMessages
+          .map((m) => {
+                'role': m.isUser ? 'user' : 'assistant',
+                'content': m.content,
+              })
+          .toList();
+      await for (final chunk in _api.chatStream(
+        message: text,
+        conversationId: conversationId,
+        history: history,
+      )) {
+        if (_streamCancelled) break;
+        final curIdx = _conversations.indexWhere((c) => c.id == conversationId);
+        if (curIdx < 0) break;
+        final cur = _conversations[curIdx];
+        final msgIdx = cur.messages.indexWhere((m) => m.id == placeholderId);
+        if (msgIdx < 0) break;
+        final streamingMsg = cur.messages[msgIdx];
+        final updated = streamingMsg.copyWith(
+          content: streamingMsg.content + chunk,
+          createdAt: DateTime.now(),
+        );
+        final updatedMsgs = List<Message>.from(cur.messages)
+          ..[msgIdx] = updated;
+        final updatedConv = cur.copyWith(
+          messages: updatedMsgs,
+          updatedAt: DateTime.now(),
+        );
+        _conversations[curIdx] = updatedConv;
+        if (_activeConversation?.id == conversationId) {
+          _activeConversation = updatedConv;
+        }
+        notifyListeners();
+      }
+    } catch (e) {
+      // Retain partial content; surface the error so the UI can show it.
+      _error = e.toString();
+    } finally {
+      _isStreaming = false;
+      _streamingMessageId = null;
+      _streamCancelled = false;
+      await _storage.saveConversations(_conversations);
+      notifyListeners();
+    }
+  }
+
+  /// Cancels an in-progress stream. The next loop iteration stops and the
+  /// partial assistant message is retained.
+  Future<void> cancelStream() async {
+    _streamCancelled = true;
   }
 
   Future<void> resendMessage(Message message) async {

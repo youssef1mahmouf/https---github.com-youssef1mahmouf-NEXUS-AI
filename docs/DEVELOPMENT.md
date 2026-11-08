@@ -27,5 +27,5 @@ Frontend: flutter test
 
 ## Git
 
-Remote: https://github.com/youssef1mahmouf/NEXUS-AI.git
+Remote: <https://github.com/youssef1mahmouf/NEXUS-AI.git>
 Branch: main
