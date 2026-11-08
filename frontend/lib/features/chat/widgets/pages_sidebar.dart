@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/models/conversation.dart';
-import '../providers/chat_provider.dart';
-
 /// Pages Sidebar — far left sidebar supporting page navigation.
 /// Supports: Homepage / Chat, Dashboard, Tasks, Settings.
 /// Can be shown/hidden independently of the Conversations Sidebar.
@@ -12,7 +9,7 @@ class PagesSidebar extends StatelessWidget {
   });
 
   // Page definitions
-  static const List<_Page> _pages = [
+  static final List<_Page> _pages = [
     _Page(
       id: 'chat',
       label: 'Chat',
@@ -46,6 +43,37 @@ class PagesSidebar extends StatelessWidget {
     }
     return null;
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: 200,
+      color: scheme.surface,
+      child: Column(
+        children: [
+          _buildProfileHeader(context),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _pages.length,
+              itemBuilder: (context, index) {
+                final page = _pages[index];
+                return _buildNavigationTile(
+                  context,
+                  page,
+                  isSelected: page.id == findPage('chat')?.id,
+                  onSelect: () {
+                    // Handle page selection
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _Page {
@@ -67,7 +95,6 @@ ListTile _buildNavigationTile(
   required bool isSelected,
   required VoidCallback onSelect,
 }) {
-  final isDark = Theme.of(context).brightness == Brightness.dark;
   final scheme = Theme.of(context).colorScheme;
 
   return ListTile(
@@ -83,7 +110,7 @@ ListTile _buildNavigationTile(
       ),
     ),
     tileColor: isSelected
-        ? scheme.primary.withValues(alpha: isDark ? 0.2 : 0.1)
+        ? scheme.primary.withValues(alpha: 0.1)
         : null,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(12),
